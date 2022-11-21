@@ -8,6 +8,12 @@ const (
 	// tags must be able to be seperated by comma(,)
 	// ex. transform:"a,b,c:10"
 	_SEPERATOR = ","
+
+	// tag parameter for mapping
+	_MAPPING = "map"
+
+	// tag parameter to skip mapping
+	_SKIP = "-"
 )
 
 // 'lower' and 'upper' are provided as default
@@ -25,3 +31,6 @@ var defaults = []I{
 		}),
 	},
 }
+
+// unavailable fields cannot be overwritten
+var unavailables = []string{"map"}

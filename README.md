@@ -133,6 +133,29 @@ fmt.Println(sample) // "HELLO"
 
 `mapping` maps `src` to `dst`. It returns error when there was an error.
 
+`map` option can target a field of `dst`. If you would like to map nested structure, use dot(.) to set its path.
+
+Use `-` to ignore field mapping.
+
+```
+type Original struct {
+    F1 string
+    F2 string `transform:"map:F2.A,upper"`
+    F3 string `transform:"map:-"`
+    F4 int    `transform:"F3"`
+}
+
+type Destination struct {
+    F1 string
+    F2 struct {
+        A string
+    }
+    F3 int
+}
+```
+
+Also no problem to convert type.
+
 ```
 type Original struct {
     V int `transform:"big"`
@@ -206,6 +229,48 @@ if err != nil {
 
 // {sender: 4d943a7c1f2af858bfee8ab499fbe76b1d046ec7, amount: 436799733113079832970000}
 t.Log(transactionDto)
+```
+
+## Entity to Response example
+
+```
+type TransactionEntity struct {
+    Id       int      `transform:"map:-"`
+    Sender   string   `transform:"add0x,map:From"`
+    Receiver string   `transform:"add0x,map:To"`
+    Amount   *big.Int `transform:"str"`
+}
+
+type TransactionResponse struct {
+    From   string `json:"from"`
+    To     string `json:"to"`
+    Amount string `json:"amount"`
+}
+
+a := transform.New()
+a.RegisterTransformer("add0x", transform.F2(func(s1, s2 string) string {
+    return "0x" + s1
+}))
+a.RegisterTransformer("str", transform.F2(func(i *big.Int, s string) string {
+    return i.String()
+}))
+
+tx := &TransactionEntity{
+    Id:       12345,
+    Sender:   "4d943a7c1f2af858bfee8ab499fbe76b1d046ec7",
+    Receiver: "fcba8de0706abf76e98d9ebeecbb42c29ab42ac3",
+    Amount:   big.NewInt(436799733113079),
+}
+
+var transactionResponse TransactionResponse
+err := a.Mapping(tx, &transactionResponse)
+if err != nil {
+    panic(err)
+}
+
+// {"from":"0x4d943a7c1f2af858bfee8ab499fbe76b1d046ec7","to":"0xfcba8de0706abf76e98d9ebeecbb42c29ab42ac3","amount":"436799733113079"}
+s, _ := json.Marshal(&transactionResponse)
+t.Log(string(s))
 ```
 
 ## How to use

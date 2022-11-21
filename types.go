@@ -3,6 +3,7 @@ package transform
 type Transformer interface {
 	Transform(a any) error
 	Mapping(src, dst any) (err error)
+	// Convert(src, dst any) (err error)
 	RegisterTransformer(name string, f f)
 	SetTag(tag string) Transformer
 	Tag() string
